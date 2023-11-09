@@ -1,0 +1,2 @@
+[alias]
+    tree= log --graph  --pretty=format:\"%C(81)%h %C(15)%s %C(196)%d %C(27)%an %C(220)%ar%C(15) %C(34)%aD\" --decorate --all
