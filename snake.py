@@ -13,14 +13,15 @@ D=(1,0)
 G=(-1,0)
 dict_direct={"h":H,"b":B,"d":D,"g":G}
 
-# intialisation
+
+# intialisation de l'affichage du jeu 
 pg.init()
 clock=pg.time.Clock()
 SCREEN= pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 sh=True
 
 # Caractéristiques du serpent 
-pos=(5,10) # colonne ligne 
+pos=(5,10) # colonne, ligne 
 long_p=3
 long=long_p
 direct_p="d"
@@ -68,10 +69,11 @@ while sh:
     pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
     direct_p=direct
     serpent.insert(0,pos)
-    ajout_serpent=serpent.pop()# cas que l'on ajoute éventuellement si le serpent s'allonge
+    ajout_serpent=serpent.pop()
     if not (long==long_p):
-        serpent.append(ajout_serpent)
+        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
     long=long_p
+    
      
 #gestion de la position du fruit 
     if pos == fruit :
@@ -80,12 +82,15 @@ while sh:
         else:
             fruit=(3,3)
         long+=1
+    
 
 # gestion de l'affichage du serpent 
     for tile in serpent:
         pg.draw.rect(SCREEN,GREEN,(tile[0]*_SIZE,tile[1]*_SIZE,_SIZE,_SIZE))
     pg.display.update()
 
-    
+# gestion de l'affichage du score 
+
+    pg.set_caption(f"snake-score:{long-3}")
 pg.quit()
 quit(0)
