@@ -3,11 +3,12 @@ import pygame as pg
 import argparse
 
 #CONSTANTES 
-BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,5.5
+BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,6
 WHITE=(255,255,255)
 GREEN=(0,255,0)
 RED=(255,0,0)
 TILE_SIZE=20
+LONG_0=3
 H=(0,-1)
 B=(0,+1)
 D=(1,0)
@@ -20,11 +21,11 @@ parser.add_argument('--bg-color-1', default=WHITE,help="first color of the backg
 parser.add_argument('--bg-color-2', default=BLACK,help="second color of the background checkerboard")
 parser.add_argument('-height', type=int, default=HEIGHT, help="height of the window")
 parser.add_argument('-width', type=int, default=WIDTH, help="height of the window")
-parser.add_argument('--fps', type=int, help="number of frames per second")
-parser.add_argument('--fruit-color', help="color of the fruit")
-parser.add_argument('--snake-color', help="color of the snake")
-parser.add_argument('--snake-length', help="length of the snake")
-parser.add_argument('--tile-size', help="size of a tail size")
+parser.add_argument('--fps', type=int, default=FPS, help="number of frames per second")
+parser.add_argument('--fruit-color', default=RED,help="color of the fruit")
+parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
+parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
+parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
 args = parser.parse_args()
 print(args)
 
@@ -39,39 +40,36 @@ if args.snake_length < 2:
     raise ValueError("le serpent est trop court")
 
 
- 
-
-
-
-
 # intialisation de l'affichage du jeu 
 pg.init()
 clock=pg.time.Clock()
-SCREEN= pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+SCREEN= pg.display.set_mode((args.width,args.height))
 sh=True
+score=0
+
+# caractéristiques du fruit 
+fruit=(3,3)
 
 # Caractéristiques du serpent 
 pos=(5,10) # colonne, ligne 
-long_p=3
-long=long_p # long est la longueur actuelle et long_p la longueur précédente
+long_p=LONG_0
+long=args.snake_length # long est la longueur actuelle et long_p la longueur précédente
 direct_p="d"
 serpent=[tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct_p])))]
 for k in range(long):
     serpent.append(tuple(map(lambda i,j : i+j , serpent[-1] ,tuple(dict_direct[direct_p]))))
 
-# caractéristiques du fruit 
-fruit=(3,3)
 # BOUCLE
 while sh:  
-    clock.tick(CLOCK_FREQUENCY)
+    clock.tick(FPS)
     SCREEN.fill(WHITE)
-    for k in range(0,SCREEN_WIDTH,_SIZE):
+    for k in range(0,args.width,args.tile_size):
         if int(k/20)%2:
-            for j in range(0,SCREEN_HEIGHT,2*_SIZE):
-                pg.draw.rect(SCREEN,BLACK,(k,j,_SIZE,_SIZE))
+            for j in range(0,args.height,2*args.tile_size):
+                pg.draw.rect(SCREEN,BLACK,(k,j,args.tile_size,args.tile_size))
         else:
-            for j in range(20,SCREEN_HEIGHT,2*_SIZE):
-                pg.draw.rect(SCREEN,BLACK,(k,j,_SIZE,_SIZE))
+            for j in range(20,args.height,2*args.tile_size):
+                pg.draw.rect(SCREEN,BLACK,(k,j,args.tile_size,args.tile_size))
 
 # gestion de la direction 
     direct=direct_p # sans changement de direction, le serpent continue tout droit 
@@ -91,34 +89,29 @@ while sh:
             sh=False
 
 #gestion de l'affichage du fruit 
-    pg.draw.rect(SCREEN,RED,(fruit[0]*_SIZE,fruit[1]*_SIZE,_SIZE,_SIZE))
+    pg.draw.rect(SCREEN,RED,(fruit[0]*TILE_SIZE,fruit[1]*TILE_SIZE,TILE_SIZE,TILE_SIZE))
 
-#gestion de la position du serpent 
-
+#gestion de la position du fruit 
+    
     pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
     direct_p=direct
     serpent.insert(0,pos)
     ajout_serpent=serpent.pop()
-    if not (long==long_p):
-        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
-    long=long_p
-    
-     
-#gestion de la position du fruit 
     if pos == fruit :
+        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
+        score+=1
         if fruit==(3,3):
             fruit=(15,10)
         else:
             fruit=(3,3)
-        long+=1
-    
 
+    
 # gestion de l'affichage du serpent 
     for tile in serpent:
-        pg.draw.rect(SCREEN,GREEN,(tile[0]*_SIZE,tile[1]*_SIZE,_SIZE,_SIZE))
+        pg.draw.rect(SCREEN,GREEN,(tile[0]*args.tile_size, tile[1]*args.tile_size ,args.tile_size ,args.tile_size))
     pg.display.update()
 
 # gestion de l'affichage du score 
-    """pg.set_caption(f"snake-score:{long-3}")""" 
+    pg.display.set_caption(f"snake-score:{score}")
 pg.quit()
 quit(0)
