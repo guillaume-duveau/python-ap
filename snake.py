@@ -82,6 +82,7 @@ for k in range(long):
     serpent.append(tuple(map(lambda i,j : i+j , serpent[-1] ,tuple(dict_direct[direct_p]))))
 
 # BOUCLE
+logger.info("début de la boucle principale")
 while sh:  
     clock.tick(args.fps)
     SCREEN.fill(args.bg_color_1)
