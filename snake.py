@@ -29,7 +29,7 @@ parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
 parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
 parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
 parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
-parser.add_argument('-g', help ='log level', action="store_true")
+parser.add_argument('-g', help ='log level', action="store_false")
 args = parser.parse_args()
 print(args)
 
@@ -77,9 +77,9 @@ pos=(5,10) # colonne, ligne
 long_p=LONG_0
 long=args.snake_length # long est la longueur actuelle et long_p la longueur précédente
 direct_p="d"
-serpent=[tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct_p])))]
+serpent=[tuple(map(lambda i,j : i-j , pos ,tuple(dict_direct[direct_p])))]
 for k in range(long):
-    serpent.append(tuple(map(lambda i,j : i+j , serpent[-1] ,tuple(dict_direct[direct_p]))))
+    serpent.append(tuple(map(lambda i,j : i-j , serpent[-1] ,tuple(dict_direct[direct_p]))))
 
 # BOUCLE
 logger.info("début de la boucle principale")
@@ -118,6 +118,9 @@ while sh:
     
     pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
     direct_p=direct
+    if pos in serpent[1:]: # arrêt du jeu si le serpent entre en collision avec lui-même
+        logger.info("Le serpent est entré en collision avec lui-même")
+        sh = False 
     serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
     ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
     if pos == fruit :
@@ -128,6 +131,7 @@ while sh:
             fruit=(15,10)
         else:
             fruit=(3,3)
+    
         
     # gestion de la sortie de l'écran du serpent 
     if args.gameover_on_exit : 
