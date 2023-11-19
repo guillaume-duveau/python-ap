@@ -1,6 +1,8 @@
 # importation des modules 
 import pygame as pg
 import argparse
+import logging
+import sys
 
 #CONSTANTES 
 BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,6
@@ -27,8 +29,25 @@ parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
 parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
 parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
 parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
+parser.add_argument('-g', help ='log level', action="store_true")
 args = parser.parse_args()
 print(args)
+
+# Définition du "root logger" en fonction des arguments donnés au parser 
+logger = logging.getLogger(__name__)
+root = logging.getLogger()
+handler = logging.StreamHandler(sys.stderr)
+fmt = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+handler.setFormatter(fmt)
+root.addHandler(handler)
+if args.g:
+    logger.setLevel(logging.INFO)
+else:
+    logger.setLevel(logging.DEBUG)
+logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
+logger.error("Quelque chose de mal a eu lieu")
+logger.warning("Quelque chose s'est mal passé")
+
 
 # vérification des arguments
 if (args.bg_color_1 ==  args.bg_color_2) or (args.bg_color_1 ==  args.snake_color) or (args.bg_color_2 ==  args.snake_color):
@@ -37,13 +56,11 @@ if (args.bg_color_1 ==  args.bg_color_2) or (args.bg_color_1 ==  args.snake_colo
 if (args.bg_color_1 ==  args.fruit_color) or (args.bg_color_2 ==  args.fruit_color) or (args.snake_color ==  args.fruit_color):
     raise ValueError("Les couleurs doivent être diférentes") # même chose mais pour la couleur du fruit 
 
-
 if (args.height % args.tile_size) or (args.width % args.tile_size) or (args.width // args.tile_size < 20 ) or (args.height // args.tile_size < 12 ): 
     raise ValueError("Porblème de compatibilité des tailles ")
  
 if args.snake_length < 2:
     raise ValueError("le serpent est trop court")
-
 
 # intialisation de l'affichage du jeu 
 pg.init()
@@ -103,6 +120,7 @@ while sh:
     serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
     ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
     if pos == fruit :
+        logger.info('le serpent a mangé un fruit')
         serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
         score+=1
         if fruit==(3,3):
@@ -137,4 +155,5 @@ while sh:
 # gestion de l'affichage du score 
     pg.display.set_caption(f"snake-score:{score}")
 pg.quit()
+logger.info ("fin du jeu")
 quit(0)
