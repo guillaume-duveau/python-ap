@@ -3,9 +3,10 @@ import pygame as pg
 import argparse
 import logging
 import sys
+import random 
 
 #CONSTANTES 
-BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,6
+BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,1
 WHITE=(255,255,255)
 GREEN=(0,255,0)
 RED=(255,0,0)
@@ -17,86 +18,100 @@ D=(1,0)
 G=(-1,0)
 dict_direct={"h":H,"b":B,"d":D,"g":G}
 
-#définiton des arguments de la fonction 
-parser = argparse.ArgumentParser(description='Some description.')
-parser.add_argument('--bg-color-1', default=WHITE,help="first color of the background checkerboard")
-parser.add_argument('--bg-color-2', default=BLACK,help="second color of the background checkerboard")
-parser.add_argument('-height', type=int, default=HEIGHT, help="height of the window")
-parser.add_argument('-width', type=int, default=WIDTH, help="height of the window")
-parser.add_argument('--fps', type=int, default=FPS, help="number of frames per second")
-parser.add_argument('--fruit-color', default=RED,help="color of the fruit")
-parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
-parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
-parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
-parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
-parser.add_argument('-g', help ='log level', action="store_true")
-args = parser.parse_args()
-print(args)
 
-# Définition du "root logger" en fonction des arguments donnés au parser 
-logger = logging.getLogger(__name__)
-root = logging.getLogger()
-handler = logging.StreamHandler(sys.stderr)
-fmt = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-handler.setFormatter(fmt)
-root.addHandler(handler)
+def read_args(): # fonction qui renvoie l'ensemble des arguments 
+    parser = argparse.ArgumentParser(description='Some description.')
+    parser.add_argument('--bg-color-1', default=WHITE,help="first color of the background checkerboard")
+    parser.add_argument('--bg-color-2', default=BLACK,help="second color of the background checkerboard")
+    parser.add_argument('-height', type=int, default=HEIGHT, help="height of the window")
+    parser.add_argument('-width', type=int, default=WIDTH, help="height of the window")
+    parser.add_argument('--fps', type=int, default=FPS, help="number of frames per second")
+    parser.add_argument('--fruit-color', default=RED,help="color of the fruit")
+    parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
+    parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
+    parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
+    parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
+    parser.add_argument('-g', help ='log level', action="store_true")
+    args = parser.parse_args()
+    # vérification des arguments
+    if (args.bg_color_1 ==  args.bg_color_2) or (args.bg_color_1 ==  args.snake_color) or (args.bg_color_2 ==  args.snake_color):
+        raise ValueError("Les couleurs doivent être diférentes") # on vérifie que les couleurs sont différentes
 
-# on affiche les messages sur la console seulement si args.g est vrai 
-if args.g: # affichage en fonction de la valeur de  args.g
-    logger.setLevel(logging.DEBUG)
-    logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
-    logger.error("Quelque chose de mal a eu lieu") # message spécifique pour l'erreur 
-    logger.warning("Quelque chose s'est mal passé") # message spécifique pour l'avertissement 
+    if (args.bg_color_1 ==  args.fruit_color) or (args.bg_color_2 ==  args.fruit_color) or (args.snake_color ==  args.fruit_color):
+        raise ValueError("Les couleurs doivent être diférentes") # même chose mais pour la couleur du fruit 
 
+    if (args.height % args.tile_size) or (args.width % args.tile_size) or (args.width // args.tile_size < 20 ) or (args.height // args.tile_size < 12 ): 
+        raise ValueError("Porblème de compatibilité des tailles ")
+    
+    if args.snake_length < 2:
+        raise ValueError("le serpent est trop court")
+    return args 
 
-# vérification des arguments
-if (args.bg_color_1 ==  args.bg_color_2) or (args.bg_color_1 ==  args.snake_color) or (args.bg_color_2 ==  args.snake_color):
-    raise ValueError("Les couleurs doivent être diférentes") # on vérifie que les couleurs sont différentes
-
-if (args.bg_color_1 ==  args.fruit_color) or (args.bg_color_2 ==  args.fruit_color) or (args.snake_color ==  args.fruit_color):
-    raise ValueError("Les couleurs doivent être diférentes") # même chose mais pour la couleur du fruit 
-
-if (args.height % args.tile_size) or (args.width % args.tile_size) or (args.width // args.tile_size < 20 ) or (args.height // args.tile_size < 12 ): 
-    raise ValueError("Porblème de compatibilité des tailles ")
- 
-if args.snake_length < 2:
-    raise ValueError("le serpent est trop court")
-
-# intialisation de l'affichage du jeu 
-pg.init()
-clock=pg.time.Clock()
-SCREEN= pg.display.set_mode((args.width,args.height))
-sh=True
-score=0
-
-# caractéristiques du fruit 
-fruit=(3,3)
-
-# Caractéristiques du serpent 
-pos=(5,10) # colonne, ligne 
-long_p=LONG_0
-long=args.snake_length # long est la longueur actuelle et long_p la longueur précédente
-direct_p="d"
-serpent=[tuple(map(lambda i,j : i-j , pos ,tuple(dict_direct[direct_p])))]
-for k in range(long):
-    serpent.append(tuple(map(lambda i,j : i-j , serpent[-1] ,tuple(dict_direct[direct_p]))))
-
-# BOUCLE
-if args.g: # affichage en fonction de la valeur de  args.g
-    logger.info("début de la boucle principale")
-while sh:  
-    clock.tick(args.fps)
-    SCREEN.fill(args.bg_color_1)
-    for k in range(0,args.width,args.tile_size):
+ # fonction qui dessine le damier 
+def draw_checkboard(screen,width,height,bg_color_1,bg_color_2,tile_size):
+    for k in range(0,width,tile_size): # on itère d'abord sur la largeur du damier
         if int(k/20)%2:
-            for j in range(0,args.height,2*args.tile_size):
-                pg.draw.rect(SCREEN,args.bg_color_2,(k,j,args.tile_size,args.tile_size))
+            for j in range(0,height,2*tile_size): # puis sur sa profondeur
+                pg.draw.rect(screen,bg_color_2,(k,j,tile_size,tile_size))
         else:
-            for j in range(20,args.height,2*args.tile_size):
-                pg.draw.rect(SCREEN,args.bg_color_2,(k,j,args.tile_size,args.tile_size))
+            for j in range(20,height,2*tile_size):
+                pg.draw.rect(screen,bg_color_2,(k,j,tile_size,tile_size))
+    pg.display.update()
 
-# gestion de la direction  du serpent 
-    direct=direct_p # sans changement de direction, le serpent continue tout droit 
+#gestion de l'affichage du fruit 
+def draw_fruit(screen,fruit,tile_size,fruit_color=RED):
+    pg.draw.rect(screen,fruit_color,(fruit[0]*tile_size,fruit[1]*tile_size,tile_size,tile_size))
+    pg.display.update()
+
+# gestion de l'affichage du serpent 
+def draw_snake(screen,serpent,snake_color,tile_size):
+    for tile in serpent:
+        pg.draw.rect(screen,snake_color,(tile[0]*tile_size,tile[1]*tile_size,tile_size,tile_size))
+    pg.display.update()
+
+# on définit une fonction qui dessine tout 
+def draw(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit):
+    screen.fill(bg_color_1)
+    draw_checkboard(screen,width,height,bg_color_1,bg_color_2,tile_size)
+    draw_snake(screen,serpent,snake_color,tile_size)
+    draw_fruit(screen,fruit,tile_size,fruit_color)
+    pg.display.update()
+ 
+# fonction qui permet d'obtenir le score actuel du joueur
+def get_score(serpent):
+    return len(serpent)-3
+
+# mise à jour de la position du fruit 
+def update_fruit(width,height,tile_size):
+    fruit = (random.randint(0,width//tile_size),random.randint(0,height//tile_size))
+    return fruit
+
+# mise à jour de l'affichage 
+def update_display(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit):
+    draw(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit)
+    pg.display.set_caption(f"snake-score:{get_score(serpent)}")
+    pg.display.update()
+
+#gestion de la position du serpent  
+def move_snake(sh,direct,width,height,tile_size,pos,serpent,fruit,v_g):
+    pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
+    if pos in serpent[1:]: # arrêt du jeu si le serpent entre en collision avec lui-même
+        if v_g: # affichage en fonction de la valeur de  args.g
+            logger.info("Le serpent est entré en collision avec lui-même")
+        sh = False 
+    serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
+    ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
+    if pos == fruit :
+        if v_g: # affichage en fonction de la valeur de  args.g
+            logger.info('le serpent a mangé un fruit')
+        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
+        fruit=update_fruit(width,height,tile_size)
+    return serpent,fruit,sh
+
+def process_events(sh,screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit,v_gameover_on_exit,v_g,direct,pos):
+    # gestion de la direction  du serpent 
+    # sans changement de direction, le serpent continue tout droit 
+    pos=serpent[0]
     for event in pg.event.get():
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_UP: # aller en haut 
@@ -111,58 +126,84 @@ while sh:
                 sh=False
         if event.type == pg.QUIT:
             sh=False
-    
-#gestion de l'affichage du fruit 
-    pg.draw.rect(SCREEN,RED,(fruit[0]*args.tile_size,fruit[1]*args.tile_size,args.tile_size,args.tile_size))
 
-#gestion de la position du serpent  
-    
-    pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
-    direct_p=direct
-    if pos in serpent[1:]: # arrêt du jeu si le serpent entre en collision avec lui-même
-        if args.g: # affichage en fonction de la valeur de  args.g
-            logger.info("Le serpent est entré en collision avec lui-même")
-        sh = False 
-    serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
-    ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
-    if pos == fruit :
-        if args.g: # affichage en fonction de la valeur de  args.g
-            logger.info('le serpent a mangé un fruit')
-        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
-        score+=1
-        if fruit==(3,3):
-            fruit=(15,10)
-        else:
-            fruit=(3,3)
-    
-        
-    # gestion de la sortie de l'écran du serpent 
-    if args.gameover_on_exit : 
-        if pos[0] in [ 0, args.width // args.tile_size] or pos[1] in [ 0, args.height // args.tile_size ]:
-            pg.quit()
-    elif not ( args.gameover_on_exit): 
+    serpent,fruit,sh=move_snake(sh,direct,width,height,tile_size,pos,serpent,fruit,v_g)
+    update_display(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit)
+    # gestion de la sortie d'écran du serpent 
+    if v_gameover_on_exit : 
+        if pos[0] in [ 0, width // tile_size] or pos[1] in [ 0, height // tile_size ]:
+            sh=False
+    elif not (v_gameover_on_exit): 
         if (pos[0] == 0) and (direct == "g"): 
             posc = pos
-            pos = ( args.width//args.tile_size, posc[1] ) # si le serpent touche le bord de gauche, il part à droite
-        if (pos[0] == args.width//args.tile_size) and (direct == "d"):
+            pos = ( width//tile_size, posc[1] ) # si le serpent touche le bord de gauche, il part à droite
+        if (pos[0] == width//tile_size) and (direct == "d"):
             posc= pos
             pos = (0, posc[1]) #si le serpent touche le bord de droite, il part à gauche
-        if (pos[1] == args.height//args.tile_size) and (direct == "b"):
+        if (pos[1] == height//tile_size) and (direct == "b"):
             posc = pos
             pos = (posc[0],0) # si le serpent touche le bord du bas, il part en haut 
         if (pos[1] == 0) and (direct == "h"):
             posc = pos 
-            pos = (posc[0],args.height//args.tile_size )# si le serpent touche le bord du haut  , il part en haut 
+            pos = (posc[0],height//tile_size )# si le serpent touche le bord du haut  , il part en haut 
+    
+    return sh,serpent,fruit,direct
 
     
-# gestion de l'affichage du serpent 
-    for tile in serpent:
-        pg.draw.rect(SCREEN,args.snake_color,(tile[0]*args.tile_size, tile[1]*args.tile_size ,args.tile_size ,args.tile_size))
-    pg.display.update()
+def main():
 
-# gestion de l'affichage du score 
-    pg.display.set_caption(f"snake-score:{score}")
-pg.quit()
-if args.g: # affichage en fonction de la valeur de  args.g
-    logger.info ("fin du jeu")
-quit(0)
+    # Définition du "root logger" en fonction des arguments donnés au parser 
+    logger = logging.getLogger(__name__)
+    root = logging.getLogger()
+    handler = logging.StreamHandler(sys.stderr)
+    fmt = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    handler.setFormatter(fmt)
+    root.addHandler(handler)
+
+    args=read_args()# On lit les arguments du programme 
+    if args.g: # affichage en fonction de la valeur de  args.g
+
+        logger.setLevel(logging.DEBUG)
+        logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
+        logger.error("Quelque chose de mal a eu lieu") # message spécifique pour l'erreur 
+        logger.warning("Quelque chose s'est mal passé") # message spécifique pour l'avertissement 
+
+    # on récupère les arguments utiles pour le programme 
+    width=args.width
+    height=args.height
+    bg_color_1=args.bg_color_1
+    bg_color_2=args.bg_color_2
+    fruit_color=args.fruit_color
+    snake_color=args.snake_color
+    snake_length=args.snake_length
+    tile_size=args.tile_size
+    v_gameover_on_exit=args.gameover_on_exit
+    v_g=args.g
+    
+
+    # initialisation de l'écran et de l'horloge
+    screen=pg.display.set_mode((width,height)) 
+    screen.fill(bg_color_1)
+    
+    score=0 # intialisation de l'affichage du jeu 
+    fruit=(3,3) # position initiale du fruit
+    pos=(5,10) # colonne, ligne  du serpent 
+    direct="d"
+    serpent=[tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct["d"])))]
+    for k in range(snake_length):
+        serpent.append(tuple(map(lambda i,j : i-j , serpent[-1] ,tuple(dict_direct["d"]))))
+#===========================================================================================#
+    if args.g: # affichage en fonction de la valeur de  args.g
+        logger.info("début de la boucle principale")
+    sh=True # On initialise la variable à "True" 
+    pg.init()
+    
+    # BOUCLE PRINCIPALE 
+    while sh:  
+        pg.time.delay(int(1000/args.fps))
+        sh,serpent,fruit,direct=process_events(sh,screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit,v_gameover_on_exit,v_g,direct,pos)
+    pg.quit()
+    if args.g: # affichage en fonction de la valeur de  args.g
+        logger.info ("fin du jeu")
+    quit(0)
+main()
