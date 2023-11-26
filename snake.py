@@ -29,7 +29,7 @@ parser.add_argument('--snake-color', default=GREEN,help="color of the snake")
 parser.add_argument('--snake-length',type=int, default=LONG_0,  help="length of the snake")
 parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
 parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
-parser.add_argument('-g', help ='log level', action="store_false")
+parser.add_argument('-g', help ='log level', action="store_true")
 args = parser.parse_args()
 print(args)
 
@@ -40,13 +40,13 @@ handler = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
 handler.setFormatter(fmt)
 root.addHandler(handler)
-if args.g:
-    logger.setLevel(logging.INFO)
-else:
+
+# on affiche les messages sur la console seulement si args.g est vrai 
+if args.g: # affichage en fonction de la valeur de  args.g
     logger.setLevel(logging.DEBUG)
-logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
-logger.error("Quelque chose de mal a eu lieu")
-logger.warning("Quelque chose s'est mal passé")
+    logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
+    logger.error("Quelque chose de mal a eu lieu") # message spécifique pour l'erreur 
+    logger.warning("Quelque chose s'est mal passé") # message spécifique pour l'avertissement 
 
 
 # vérification des arguments
@@ -82,7 +82,8 @@ for k in range(long):
     serpent.append(tuple(map(lambda i,j : i-j , serpent[-1] ,tuple(dict_direct[direct_p]))))
 
 # BOUCLE
-logger.info("début de la boucle principale")
+if args.g: # affichage en fonction de la valeur de  args.g
+    logger.info("début de la boucle principale")
 while sh:  
     clock.tick(args.fps)
     SCREEN.fill(args.bg_color_1)
@@ -119,12 +120,14 @@ while sh:
     pos = tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct[direct])))
     direct_p=direct
     if pos in serpent[1:]: # arrêt du jeu si le serpent entre en collision avec lui-même
-        logger.info("Le serpent est entré en collision avec lui-même")
+        if args.g: # affichage en fonction de la valeur de  args.g
+            logger.info("Le serpent est entré en collision avec lui-même")
         sh = False 
     serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
     ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
     if pos == fruit :
-        logger.info('le serpent a mangé un fruit')
+        if args.g: # affichage en fonction de la valeur de  args.g
+            logger.info('le serpent a mangé un fruit')
         serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
         score+=1
         if fruit==(3,3):
@@ -160,5 +163,6 @@ while sh:
 # gestion de l'affichage du score 
     pg.display.set_caption(f"snake-score:{score}")
 pg.quit()
-logger.info ("fin du jeu")
+if args.g: # affichage en fonction de la valeur de  args.g
+    logger.info ("fin du jeu")
 quit(0)
