@@ -98,7 +98,7 @@ def update_fruit(width,height,tile_size):
 # mise à jour de l'affichage 
 def update_display(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit):
     draw(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit)
-    pg.display.set_caption(f"snake-score:{get_score(serpent)} and pos : {serpent[0]}")
+    pg.display.set_caption(f"snake-score:{get_score(serpent)}")
     pg.display.update()
 
 #gestion de la position du serpent  
@@ -110,6 +110,14 @@ def move_snake(sh,direct,width,height,tile_size,posp,serpent,fruit,v_gameover_on
             logger.info("Le serpent est entré en collision avec lui-même")
         sh = False 
     
+    fruit_mange=False
+    if pos == fruit :
+        if v_g: # affichage en fonction de la valeur de  args.g
+            logger.info('le serpent a mangé un fruit')
+            fruit_mange=True # On utilise cette variable pour pouvoir quand même modifier la position du fruit 
+        fruit=update_fruit(width,height,tile_size)
+
+    # gestion de la sortie d'écran du serpent
     if v_gameover_on_exit : 
         if pos[0] in [ 0, width // tile_size] or pos[1] in [ 0, height // tile_size ]:
             sh=False # dans ce cas, on arrête le jeu 
@@ -127,12 +135,10 @@ def move_snake(sh,direct,width,height,tile_size,posp,serpent,fruit,v_gameover_on
     serpent.insert(0,pos) # on "ajoute une nouvelle case" au serpent
     ajout_serpent=serpent.pop() # on enlève la dernière case du serpent sauf si on atteint un fruit
     
-    if pos == fruit :
-        if v_g: # affichage en fonction de la valeur de  args.g
-            logger.info('le serpent a mangé un fruit')
-        serpent.append(ajout_serpent) # case que l'on ajoute éventuellement si le serpent s'allonge
-        fruit=update_fruit(width,height,tile_size)
-     # gestion de la sortie d'écran du serpent 
+    if fruit_mange: # on allonge éventuellement (fruit mangé ou non) la liste "serpent" a 
+        serpent.append(ajout_serpent) # On ajoute éventuellement la dernière case retirée
+
+      
     
     return serpent,fruit,sh
 
