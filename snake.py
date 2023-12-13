@@ -241,9 +241,6 @@ def main():
     if v_g: # affichage en fonction de la valeur de  args.g
 
         logger.setLevel(logging.DEBUG)
-        logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
-        logger.error("Quelque chose de mal a eu lieu") # message spécifique pour l'erreur 
-        logger.warning("Quelque chose s'est mal passé") # message spécifique pour l'avertissement 
     
 
     # initialisation de l'écran et de l'horloge
