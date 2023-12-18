@@ -115,11 +115,11 @@ def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penalite_
             score+=penalite_diff
     return score 
 
-def meilleur_alignement(L):
+def meilleur_alignement(L): # On cherche le meilleur score et le couple de chaînes qui correspond.
     i_max=0
     max_s=0
     for i in range(len(L)//2):
-        if trouver_score(L[2*i],L[2*i+1])>max_s:
+        if trouver_score(L[2*i],L[2*i+1])>max_s: # On s'intéresse à chaque couple séquence, variant
             max_s=trouver_score(L[2*i],L[2*i+1])
             i_max=i
     return max_s,L[2*i_max],L[2*i_max+1]
@@ -132,13 +132,3 @@ print(meilleur_alignement(traitement_needlemann_wunsch(sequences_adn)))
 
 # Normalement, l'exercice se fait sur le snake 
 #logger=logging.getLogger(__name__)
-
-"""
-if __name__="__main__":  # Il ne faut pas que le script se comporte comme un programme s'il est lancé en tant que module
-    import sys
-
-    handler=logging.StreamHandler()
-"""
-
-
-
