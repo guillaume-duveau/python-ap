@@ -1,27 +1,51 @@
 import sys
 import re 
-seq=''
-var=''
-id_seq=None
-id_var=None
 
-i=0
-for line in sys.stdin: # On utilise directement le flux d'entrée de la fonction => IL FAUT UNE ENTREE ( du type programme.py < texte.txt)
-    line=line.rstrip() # On enlève le "/n " en fin de ligne
-    if re.match(";",line):
-        continue
-    i+=1
-    else:
-        if re.match('(var)+$',line) and (id_seq):
-            line=line[1:]
-            var=str(line)
-            continue
-        elif re.match("(>seq)+$",line):
-            seq=linev
-            id_seq=True
-            continue
 
-def needleman_wunsch(seq1, seq2, match=2, mismatch=-1, gap_penalty=-1):
+def lire_fichier_adn(chemin_fichier): # On extrait les lignes du fichierADN
+    try:
+        with open(chemin_fichier, 'r') as fichier:
+            # Lire le contenu du fichier
+            contenu = fichier.read()
+
+            # Diviser le contenu en lignes
+            lignes = contenu.split('\n')
+
+            # Filtrer les lignes vides
+            lignes_non_vides = [ligne.strip() for ligne in lignes if ligne.strip()]
+
+            return lignes_non_vides
+    except FileNotFoundError:
+        print(f"Le fichier '{chemin_fichier}' n'a pas été trouvé.")
+        return []
+    except Exception as e:
+        print(f"Une erreur s'est produite : {e}")
+        return []
+
+
+def mise_en_forme(lignes_non_vides):#On retire les premières lignes (elles sont inutiles) 
+    try:
+        L=[]
+        passer_var=False
+        passer_seq=False
+        for i in range(2,len(lignes_non_vides)):
+            if passer_var:
+                L.append(lignes_non_vides[i])
+                passer_var=False
+            elif passer_seq:
+                L.append(lignes_non_vides[i])
+                passer_seq=False        
+            elif bool(re.match('(>seq)+',lignes_non_vides[i])):
+                passer_seq=True # lors de l'itération suivante on "passe dans le premier elif"
+            elif bool(re.match('(>var)+',lignes_non_vides[i])):
+                passer_var=True # lors de l'itération suivante on "passe dans le if passer_var"
+            else:
+                L[-1]=L[-1]+lignes_non_vides[i] # traiter le cas d'une ligne avec un seul caractère
+        return L
+    except Exception: 
+        print("Il y a eu un problème lors de l'itération")
+
+def needlemann_wunsch(seq1, seq2, match=2, mismatch=-1, gap_penalty=-1): # 
     # Initialisation de la matrice de score
     rows, cols = len(seq1) + 1, len(seq2) + 1
     score_matrix = [[0] * cols for _ in range(rows)]
@@ -65,29 +89,40 @@ def needleman_wunsch(seq1, seq2, match=2, mismatch=-1, gap_penalty=-1):
             align_seq1 = '-' + align_seq1
             align_seq2 = seq2[j - 1] + align_seq2
             j -= 1
-
     return align_seq1, align_seq2
 
-def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penaliye_diff=-2):
+def traitement_needlemann_wunsch(sequences_adn):
+    L=[]
+    for i in range(len(sequences_adn)//2):
+        seq1,seq2=needlemann_wunsch(sequences_adn[2*i],sequences_adn[2*i+1])
+        L.append(seq1)
+        L.append(seq2)
+    return L 
+
+
+
+def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penaliye_diff=-2
     for i in range(len(align_seq1)):
         if (align_seq1[i] == '-') or (align_seq2[i] == '-') :
             score+=penalite_gap
         elif align_seq1[i]==align_seq2[i]:
             score+=score_align
-        elif:
+        else:
             score+=penalite_diff
     return score 
 
-def meilleur_alignement():
-    N=
+def meilleur_alignement(L): # On cherche le meilleur score et le couple de chaînes qui correspond.
     i_max=0
     max_s=0
-    for i in range(N):
-        if trouver_score(needleman_wunsch(liste_seq[i][0],liste_seq[i][1]))>max:
-            max=trouver_score(needleman_wunsch(liste_seq[i][0],liste_seq[i][1]))
+    for i in range(len(L)//2):
+        if trouver_score(L[2*i],L[2*i+1])>max_s: # On s'intéresse à chaque couple séquence, variant
+            max_s=trouver_score(L[2*i],L[2*i+1])
             i_max=i
-    return i
+    return max_s,L[2*i_max],L[2*i_max+1]
 
+# Exemple d'utilisation
+chemin_fichier='fichierADN.txt'
+lignes_non_vides=lire_fichier_adn(chemin_fichier)
+sequences_adn=mise_en_forme(lignes_non_vides)
+print(meilleur_alignement(traitement_needlemann_wunsch(sequences_adn)))
 
-
-    
