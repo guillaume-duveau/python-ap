@@ -2,11 +2,6 @@ import sys
 import re 
 
 
-"""lignes_non_vides=[]
-for seq in sys.stdin:# on l'utilise pour lire les commandes données par l'utilisateur 
-    lignes_non_vides.append(seq)
-"""
-
 def lire_fichier_adn(chemin_fichier): # On extrait les lignes du fichierADN
     try:
         with open(chemin_fichier, 'r') as fichier:
@@ -104,8 +99,9 @@ def traitement_needlemann_wunsch(sequences_adn):
         L.append(seq2)
     return L 
 
-def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penalite_diff=-2): # On trouve le score pour deux séqueces issues de needle-wunschmann
-    score=0
+
+
+def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penaliye_diff=-2
     for i in range(len(align_seq1)):
         if (align_seq1[i] == '-') or (align_seq2[i] == '-') :
             score+=penalite_gap
@@ -130,5 +126,3 @@ lignes_non_vides=lire_fichier_adn(chemin_fichier)
 sequences_adn=mise_en_forme(lignes_non_vides)
 print(meilleur_alignement(traitement_needlemann_wunsch(sequences_adn)))
 
-# Normalement, l'exercice se fait sur le snake 
-#logger=logging.getLogger(__name__)

@@ -5,6 +5,8 @@ import argparse
 import logging
 import sys
 import random 
+import re
+from pathlib import Path
 
 #CONSTANTES 
 BLACK,WIDTH,HEIGHT,FPS=(0,0,0),400,300,1
@@ -40,6 +42,8 @@ def read_args(): # fonction qui renvoie l'ensemble des arguments
     parser.add_argument('--tile-size', type=int, default=TILE_SIZE, help="size of a tail size")
     parser.add_argument('--gameover-on-exit', help='A flag.', action='store_true') # on choisit le "mode de jeu"
     parser.add_argument('-g', help ='log level', action="store_false")
+    parser.add_argument('--high-scores-file', default='python-ap/scoresmax.txt')
+    parser.add_argument('--max-high-scores', default=5)
     args = parser.parse_args()
     
     # vérification des arguments
@@ -55,6 +59,56 @@ def read_args(): # fonction qui renvoie l'ensemble des arguments
     if args.snake_length < 2:
         raise ValueError("le serpent est trop court")
     return args 
+
+scores_eleves = Path('scoresmax.txt')
+
+def fichier_scores_eleves(): # On vérifie l'existence du fichier des scores 
+    if scores_eleves.is_file():
+        return True 
+    return False 
+    
+def creer_fichier_scores(nb_score): 
+    if not(fichier_scores_eleves()): # Si le fichier n'existe pas, on en crée un nouveau 
+        fichier=open("scoresmax.txt","a") 
+        L=[]   
+        L.append("inconnu"+ " 0") # On suppose qu'aucun score ne dépasse alors 0. 
+        for i in range(nb_score-1):
+            L.append("\ninconnu "+ "0")
+        fichier.writelines(L)
+
+def lire_scores(): #ON TRANSFORME le fichier en dictionnaire des scores faits par les joueurs ( peu pratique et utile)
+    d={}
+    with open('scoresmax.txt') as f:
+        for line in f:
+            line=line.rstrip()
+            print(line)
+            d[line[:len(line)-2]]=int(line[len(line)-1])
+    return d
+    
+def trouver_indi(nv_valeur): # on trouve l'indice d'insertion du nouveau score 
+    f = open("scoresmax.txt","r")
+    contenu=f.readlines()
+    f.close()
+    for k in range(len(contenu)): # on récupère les données chiffrées utiles
+        contenu[k]=int(re.findall('[0-9]',contenu[k])[0])
+    i_r=0
+    for i in range(len(contenu)-1):
+        if (nv_valeur > int(contenu[i+1])) and (nv_valeur < (1 + int(contenu[i]))):
+            i_r=i #on choisit le dernier indice adapté 
+    return i_r # Si aucun indice ne convient, c'est que le nouveau score est un  maximum d'où i_r=0
+
+def changer_scores(nv_valeur,nom): # fonction pour changer une valeur dans le fichier 
+    indice=trouver_indi(nv_valeur)
+    f = open("scoresmax.txt","r")
+    contenu=f.readlines()
+    contenu_c=contenu.copy()
+    contenu_c[indice]=nom+" "+str(nv_valeur)+"\n"
+    for i in range(indice+1,len(contenu)):
+        contenu_c[i]=contenu[i-1]
+    f.close()
+    f=open("scoresmax.txt","w")
+    f.writelines(contenu_c)
+    f.close()
 
  # fonction qui dessine le damier 
 def draw_checkboard(screen,width,height,bg_color_1,bg_color_2,tile_size):
@@ -88,7 +142,7 @@ def draw(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_
  
 # fonction qui permet d'obtenir le score actuel du joueur
 def get_score(serpent):
-    return len(serpent)-3 # On déduit le score directement de la longueur du serpent 
+    return len(serpent)-4 # On déduit le score directement de la longueur du serpent 
 
 # mise à jour de la position du fruit 
 def update_fruit(width,height,tile_size):
@@ -137,9 +191,8 @@ def move_snake(sh,direct,width,height,tile_size,posp,serpent,fruit,v_gameover_on
     
     if fruit_mange: # on allonge éventuellement (fruit mangé ou non) la liste "serpent" a 
         serpent.append(ajout_serpent) # On ajoute éventuellement la dernière case retirée
-
-      
-    
+        
+        
     return serpent,fruit,sh
 
 def process_events(sh,screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit,v_gameover_on_exit,v_g,direct,pos):
@@ -165,7 +218,6 @@ def process_events(sh,screen,width,height,bg_color_1,bg_color_2,snake_color,frui
     update_display(screen,width,height,bg_color_1,bg_color_2,snake_color,fruit_color,tile_size,serpent,fruit)
     
     return sh,serpent,fruit,direct
-
     
 def main():
 
@@ -182,13 +234,13 @@ def main():
     tile_size=args.tile_size
     v_gameover_on_exit=args.gameover_on_exit
     v_g=args.g
+    nb_score=args.max_high_scores
+    
+    creer_fichier_scores(nb_score) # On crée le fichier des scores 
 
     if v_g: # affichage en fonction de la valeur de  args.g
 
         logger.setLevel(logging.DEBUG)
-        logger.critical("Il s'est passé quelque chose de grave") # messages d'erreurs différenciés en fonction des incidents
-        logger.error("Quelque chose de mal a eu lieu") # message spécifique pour l'erreur 
-        logger.warning("Quelque chose s'est mal passé") # message spécifique pour l'avertissement 
     
 
     # initialisation de l'écran et de l'horloge
@@ -215,6 +267,10 @@ def main():
     pg.quit()
     if args.g: # affichage en fonction de la valeur de  args.g
         logger.info ("fin du jeu")
+    
+    if get_score(serpent) >  min(list(lire_scores().values())):
+        changer_scores(get_score(serpent),input("Nom du joueur ?"))
+
     quit(0)
 
 main()
