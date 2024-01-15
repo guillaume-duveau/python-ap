@@ -1,7 +1,6 @@
 import sys
 import re 
 
-
 def lire_fichier_adn(chemin_fichier): # On extrait les lignes du fichierADN
     try:
         with open(chemin_fichier, 'r') as fichier:
@@ -21,7 +20,6 @@ def lire_fichier_adn(chemin_fichier): # On extrait les lignes du fichierADN
     except Exception as e:
         print(f"Une erreur s'est produite : {e}")
         return []
-
 
 def mise_en_forme(lignes_non_vides):#On retire les premières lignes (elles sont inutiles) 
     try:
@@ -121,8 +119,7 @@ def meilleur_alignement(L): # On cherche le meilleur score et le couple de chaî
     return max_s,L[2*i_max],L[2*i_max+1]
 
 # Exemple d'utilisation
-chemin_fichier='fichierADN.txt'
-lignes_non_vides=lire_fichier_adn(chemin_fichier)
-sequences_adn=mise_en_forme(lignes_non_vides)
-print(meilleur_alignement(traitement_needlemann_wunsch(sequences_adn)))
-
+    chemin_fichier='fichierADN.txt'
+    lignes_non_vides=lire_fichier_adn(chemin_fichier)
+    sequences_adn=mise_en_forme(lignes_non_vides)
+    print(meilleur_alignement(traitement_needlemann_wunsch(sequences_adn)))
