@@ -97,8 +97,6 @@ def traitement_needlemann_wunsch(sequences_adn):
         L.append(seq2)
     return L 
 
-
-
 def trouver_score(align_seq1,align_seq2,penalite_gap=-1,score_align=+1,penaliye_diff=-2
     for i in range(len(align_seq1)):
         if (align_seq1[i] == '-') or (align_seq2[i] == '-') :

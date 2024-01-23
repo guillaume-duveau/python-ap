@@ -246,9 +246,6 @@ def main():
     # initialisation de l'écran et de l'horloge
     screen=pg.display.set_mode((width,height)) 
     screen.fill(bg_color_1)
-    
-    score=0 # intialisation de l'affichage du jeu 
-    fruit=(3,3) # position initiale du fruit
     pos=(5,10) # colonne, ligne  du serpent 
     direct="d"
     serpent=[tuple(map(lambda i,j : i+j , pos ,tuple(dict_direct["d"])))]
@@ -267,7 +264,6 @@ def main():
     pg.quit()
     if args.g: # affichage en fonction de la valeur de  args.g
         logger.info ("fin du jeu")
-    
     if get_score(serpent) >  min(list(lire_scores().values())):
         changer_scores(get_score(serpent),input("Nom du joueur ?"))
 
